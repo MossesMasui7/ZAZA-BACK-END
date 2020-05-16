@@ -22,7 +22,7 @@ app.get("/obtener", (req, res) => {
     });
   });
 });
-
+//manda correo electronico de confirmacion
 app.get("/confirmar/:id",(req,res)=>{
   let id = req.params.id
   Usuario.findByIdAndUpdate(
@@ -44,6 +44,7 @@ app.get("/confirmar/:id",(req,res)=>{
     }
   );
 });
+//Verificar que username no este en uso
 //new RegExp(username, 'i')
 app.get("/verificar/username/:username", (req, res) => {
 let username = req.params.username;
@@ -72,7 +73,8 @@ app.post("/registrar", (req, res) => {
     username:body.username,
     email: body.email,
     contraseña: bcrypt.hashSync(body.contraseña, 10),
-    img: body.img
+    img: body.img,
+    telefono: body.telefono
   });
   
   usuario.save((err, usrDB) => {

@@ -6,13 +6,8 @@ let Schema = mongoose.Schema;
 let UsuarioSchema = new Schema({
   nombre: {
     type: String,
-    required: false,
+    required: true,
   
-  },
-  apellidos: {
-    type: String,
-    required: false,
-    
   },
   username:{
     type:String,
@@ -32,6 +27,10 @@ let UsuarioSchema = new Schema({
   img: {
     type: String,
     default:'noImage.jpeg'
+  },
+  telefono:{
+    type:String,
+    required:[true,"Favor ingresar su telefono"]
   },
   premium:{
     type:Boolean,

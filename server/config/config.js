@@ -10,7 +10,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || "dev";
 let urlDB;
 
 if (process.env.NODE_ENV === "dev") {
-  urlDB = "mongodb+srv://ZAZA:8ZlKiCWwvgFkjMkO@cluster0-8yfmm.mongodb.net/ZAZA?retryWrites=true&w=majority";
+  urlDB = "mongodb+srv://zaza1:OM945kWYtSdBNQCY@cluster0-21svm.mongodb.net/test?retryWrites=true&w=majority";
 
 } else {
   urlDB = "mongodb://localhost:27017/ZAZA";
