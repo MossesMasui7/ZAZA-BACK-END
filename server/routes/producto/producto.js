@@ -32,5 +32,22 @@ app.post('/registrar', (req, res) => {
         });
     });
 });
+
+app.get('/obtener/:cdb',(req,res) => {
+        let cdb = req.params.cdb
+    Producto.find({cdb:cdb},(err,Prodb)=>{
+        if (err) {
+            return res.status(400).json({
+                ok:false,
+                cont:err
+            })
+        }
+        return res.status(200).json({
+            ok:true,
+            resp:Prodb
+        })
+    })
+
+});
      
 module.exports = app;
