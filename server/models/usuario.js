@@ -56,7 +56,7 @@ let UsuarioSchema = new Schema({
 });
 
 UsuarioSchema.plugin(uniquevalidator, {
-  message: "{PATH} ya esta en uso por favor registre uno diferente"
+  message: "{PATH} Ya esta en uso por favor registre uno diferente"
 });
 
 module.exports = mongoose.model("Usuario", UsuarioSchema);

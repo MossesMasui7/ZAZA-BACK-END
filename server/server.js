@@ -36,9 +36,9 @@ mongoose.connect(
   (err, resp) => {
     if (err) throw err;
 
-    console.log("base de datos online <3 ");
+    console.log("Base de Datos Online <3");
   }
 );
 //puerto que escucha
 app.listen(process.env.PORT);
-console.log("escuchando por el puerto " + process.env.PORT);
+console.log("Escuchando por el Puerto " + process.env.PORT);

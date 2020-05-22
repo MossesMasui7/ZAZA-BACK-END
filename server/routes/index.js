@@ -5,7 +5,8 @@ const app = express();
 
 app.use("/usuario", require("./usuario/registro"));
 app.use("/usuario", require("./usuario/login"));
-app.use("/usuario", require("./usuario/producto"));
+app.use("/usuario", require("./productos/producto"));
+app.use("/usuario",require("./usuario/resetpass"))
 
 
 module.exports = app;
