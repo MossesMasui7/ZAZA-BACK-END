@@ -1,100 +1,66 @@
 const express = require('express');
-const fileUpload = require('express-fileupload');
-const uniqid = require('uniqid');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const app = express();
-
 const Publicidad = require('../models/publicidad');
 
-app.use(fileUpload());
-
-app.put('/upload/:ruta/:id', (req, res) => {
-    let id = req.params.id;
-    let ruta = req.params.ruta;
-    let archivo = req.files.archivo;
-    let nombre = uniqid() + path.extname(archivo.name);
-
-    if (!req.files) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'No se ha seleccionado ningun archivo'
-            }
-        });
-    }
-
-    let validExtensions = ['image/png', 'image/jpg', 'image/jpeg'];
-    if (!validExtensions.includes(archivo.mimetype)) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'No se admite esta extencion de imagen'
-            }
-        });
-    }
-
-    archivo.mv(`upload/${ruta}/${nombre}`, (err) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }
-    });
-
-    switch (ruta) {
-        case 'publicidad':
-            imagenPublicidad(id, res, nombre);
-            break;
-        default:
-            return res.status(400).json({
-                ok: false,
-                err: {
-                    message: 'Ruta no valida'
-                }
-            });
-            break;
+//Configuracion de multer 
+let storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'uploads')
+    },
+    filename: function(req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now())
     }
 });
+let upload = multer({ storage: storage });
 
-function imagenPublicidad(id, res, nombreImagen) {
-    Publicidad.findById(id, (err, pub) => {
-        if (err) {
-            borrarArchivo(nombreImagen, 'publicidad');
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }
 
-        if (!pub) {
-            borrarArchivo(nombreImagen, 'publicidad');
-            return res.status(400).json({
-                ok: false,
-                err: {
-                    message: 'Publicidad no encontrada'
-                }
-            });
-        }
+//Subida de fotos 
+app.post('/subir', upload.single('picture'), (req, res) => {
+    let img = fs.readFileSync(req.file.path);
+    let encode_image = img.toString('base64');
 
-        pub.img = nombreImagen;
+    let finalImg = {
+        contentType: req.file.mimetype,
+        image: new Buffer(encode_image, 'base64')
+    };
+    db.collection('quotes').insertOne(finalImg, (err, result) => {
+        console.log(result)
 
-        pub.save((err, pubDB) => {
-            if (err) {
-                borrarArchivo(nombreImagen, 'publicidad');
-                return res.status(400).json({
-                    ok: false,
-                    err
-                });
-            }
-            return res.status(200).json({
-                ok: true,
-                pubDB
-            });
-        });
-    });
-}
+        if (err) return console.log(err)
+
+        console.log('saved to database')
+        res.redirect('/')
+
+
+    })
+});
+
+//Obtener fotos 
+app.get('/photo/:id', (req, res) => {
+    var filename = req.params.id;
+
+    db.collection('mycollection').find({ '_id': ObjectId(filename) }, (err, result) => {
+
+        if (err) return console.log(err)
+
+        res.contentType('image/jpeg');
+        res.send(result.image.buffer)
+
+    })
+})
+
+//     let validExtensions = ['image/png', 'image/jpg', 'image/jpeg'];
+//     if (!validExtensions.includes(archivo.mimetype)) {
+//         return res.status(400).json({
+//             ok: false,
+//             err: {
+//                 message: 'No se admite esta extencion de imagen'
+//             }
+//         });
+//     }
 
 function borrarArchivo(nombreImagen, ruta) {
     let pathImg = path.resolve(__dirname, `../../uploads/${ruta}/${nombreImagen}`);
@@ -103,5 +69,3 @@ function borrarArchivo(nombreImagen, ruta) {
     }
     console.log('Imagen borrada con exito');
 }
-
-module.exports = app;

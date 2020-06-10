@@ -3,6 +3,7 @@ require("./config/config");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const multer = require("multer");
 const app = express();
 //habilita CORS
 app.use((req, res, next) => {
@@ -38,6 +39,7 @@ mongoose.connect(
         console.log("Base de Datos Online <3 ");
     }
 );
+
 //puerto que escucha
 app.listen(process.env.PORT);
 console.log("Escuchando por el Puerto " + process.env.PORT);
