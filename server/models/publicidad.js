@@ -24,4 +24,14 @@ let PublicidadSchema = new Schema({
     }
 });
 
+const host = 'http://localhost';
+const port = 3000;
+
+PublicidadSchema.methods.imgUrl = function imgUrl(filenameUno, filenameDos, filenameTres, filenameCuatro) {
+    this.imagenUno = `${host}:${port}/public/${filenameUno}`
+    this.imagenDos = `${host}:${port}/public/${filenameDos}`
+    this.imagenTres = `${host}:${port}/public/${filenameTres}}`
+    this.imagenCuatro = `${host}:${port}/public/${filenameCuatro}`
+}
+
 module.exports = mongoose.model("Publicidad", PublicidadSchema);

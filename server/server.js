@@ -26,7 +26,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 //archivo agrupador de indices
 app.use("/api", require("./routes/index"));
-//conector a la db
+//ruta imagenes 
+app.use('/public', express.static(`${__dirname}/uploads`))
+    //conector a la db
 mongoose.connect(
     process.env.URLDB, {
         useNewUrlParser: true,
