@@ -2,7 +2,8 @@ const express = require("express");
 const _ = require("underscore");
 ///const { verificatoken } = require('../../middlewares/autenticacion');
 const Producto = require("../../models/producto");
-const negocio = require("../../models/negocio");
+const Negocio = require("../../models/negocio");
+const usuario = require("../../models/usuario");
 const app = express();
 
 app.post("/registrar", (req, res) => {
@@ -51,18 +52,18 @@ app.get("/obtener/:cdb", (req, res) => {
 app.get("/producto/obtenerComentarios/:id", (req, res) => {
     let id = req.params.id;
     Producto.find({ '_id': id }, (err, proDB) => {
-      if (err) {
-        return res.status(400).json({
-          ok: false,
-          err,
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err,
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            proDB
         });
-      }
-      return res.status(200).json({
-        ok: true,
-        proDB
-      });
     });
-  });
+});
 
 //Verificar que codigo de barras  no este en uso
 //new RegExp(username, 'i')
@@ -146,6 +147,54 @@ app.put("/producto/agregarComentario/:id", (req, res) => {
     );
 });
 
+
+
+app.get("/comparar/:idUsuario/:idNegocio", (req, res) => {
+    let id = req.params.idUsuario;
+    let idNegocio = req.params.idNegocio
+    let resultado = []
+    usuario.findById(id, (err, usuarioDB) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err,
+            });
+        }
+
+        Producto.populate(usuarioDB, { path: "carrito.producto" }, function(
+            err,
+            usuarioDB
+        ) {
+
+            usuarioDB['carrito'].forEach(carrito => {
+
+                carrito['producto']['tiendas'].forEach(element => {
+                    if (element['negocio'] == idNegocio) {
+                        let inf = {
+                            "Precio": element['precio'],
+                            "Tienda": element['negocio'],
+                            "Producto": carrito['producto']['_id']
+                        }
+                        resultado.push(inf)
+                    }
+
+
+                });
+
+
+
+
+            });
+
+
+            return res.status(200).json({
+                ok: true,
+                resp: resultado
+            })
+        });
+
+    });
+});
 
 module.exports = app;
 
