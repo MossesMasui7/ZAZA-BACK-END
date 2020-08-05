@@ -18,6 +18,7 @@ app.route("/obtenerNegocios").get(function(req, res) {
 app.post("/registrarNegocio", (req, res) => {
     let body = req.body;
 
+
     let negocio = new Negocio({
         nombre: body.nombre,
         direccion: body.direccion,
@@ -37,6 +38,29 @@ app.post("/registrarNegocio", (req, res) => {
             ok: true,
             negocioDB,
         });
+
+  let negocio = new Negocio({
+    nombre: body.nombre,
+    direccion: body.direccion,
+    categorias: body.categorias,
+    imagenes: body.imagenes,
+    estado: body.estado,
+    cordenadas: {
+      longitude: body.longitude,
+      latitude: body.latitude,
+    },
+  });
+  negocio.save((err, negocioDB) => {
+    if (err) {
+      return res.status(400).json({
+        ok: false,
+        err,
+      });
+    }
+    return res.status(200).json({
+      ok: true,
+      negocioDB,
+
     });
 });
 

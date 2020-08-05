@@ -2,50 +2,62 @@ const express = require("express");
 const _ = require("underscore");
 ///const { verificatoken } = require('../../middlewares/autenticacion');
 const Producto = require("../../models/producto");
-const Negocio = require("../../models/negocio");
+
+
 const usuario = require("../../models/usuario");
+=======
+const negocio = require("../../models/negocio");
+const upload = require("../../../scripts/uploadImage/upload");
+
+
 const app = express();
 
 app.post("/registrar", (req, res) => {
-    let body = req.body;
+  let body = req.body;
 
-    let producto = new Producto({
-        cdb: body.cdb,
-        nombre: body.nombre,
-        descripcion: body.descripcion,
-        img: body.img,
+  let producto = new Producto({
+    cdb: body.cdb,
+    nombre: body.nombre,
+    descripcion: body.descripcion,
+    img: body.img,
+  });
+
+  producto.img = upload(producto.img, "producto");
+
+  producto.save((err, pDB) => {
+    if (err) {
+      return res.status(400).json({
+        ok: false,
+        err,
+      });
+    }
+    return res.status(200).json({
+      ok: true,
+      pDB,
     });
-    producto.save((err, pDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err,
-            });
-        }
-        return res.status(200).json({
-            ok: true,
-            pDB,
-        });
-    });
+  });
 });
 app.get("/obtener/:cdb", (req, res) => {
-    let cdb = req.params.cdb;
+  let cdb = req.params.cdb;
 
-    Producto.find({ $or: [{ cdb: cdb }, { descripcion: { $regex: ".*" + cdb + ".*" } }] }, {})
-        .populate("tiendas.negocio")
-        .exec((err, CDBDB) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    err,
-                });
-            }
-
-            return res.status(200).json({
-                ok: true,
-                resp: CDBDB,
-            });
+  Producto.find(
+    { $or: [{ cdb: cdb }, { descripcion: { $regex: ".*" + cdb + ".*" } }] },
+    {}
+  )
+    .populate("tiendas.negocio")
+    .exec((err, CDBDB) => {
+      if (err) {
+        return res.status(400).json({
+          ok: false,
+          err,
         });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        resp: CDBDB,
+      });
+    });
 });
 
 
@@ -69,53 +81,56 @@ app.get("/producto/obtenerComentarios/:id", (req, res) => {
 //new RegExp(username, 'i')
 
 app.get("/verificar/cdb/:cdb", (req, res) => {
-    let cdb = req.params.cdb;
-    let disponible = true;
-    Producto.find({ cdb: cdb }, { cdb: 1 }).exec((err, CDBDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err,
-            });
-        }
-        if (CDBDB.length > 0) {
-            disponible = false;
-        }
-        return res.status(200).json({
-            disponible,
-        });
+  let cdb = req.params.cdb;
+  let disponible = true;
+  Producto.find({ cdb: cdb }, { cdb: 1 }).exec((err, CDBDB) => {
+    if (err) {
+      return res.status(400).json({
+        ok: false,
+        err,
+      });
+    }
+    if (CDBDB.length > 0) {
+      disponible = false;
+    }
+    return res.status(200).json({
+      disponible,
     });
+  });
 });
 
 app.put("/add/negocio/:id", (req, res) => {
-    let id = req.params.id;
-    let body = req.body;
-    Producto.findByIdAndUpdate(
-        id, {
-            $push: {
-                tiendas: {
-                    precio: body.precio,
-                    negocio: body.negocio,
-                    oferta: body.oferta,
-                    inventario: body.inventario,
-                },
-            },
-        }, { new: true, runValidators: true, context: "query" },
-        (err, proDB) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    err,
-                });
-            }
-            return res.status(200).json({
-                ok: true,
-                msg: `Usuario actualizado correctamente`,
-                cont: proDB,
-            });
-        }
-    );
+  let id = req.params.id;
+  let body = req.body;
+  Producto.findByIdAndUpdate(
+    id,
+    {
+      $push: {
+        tiendas: {
+          precio: body.precio,
+          negocio: body.negocio,
+          oferta: body.oferta,
+          inventario: body.inventario,
+        },
+      },
+    },
+    { new: true, runValidators: true, context: "query" },
+    (err, proDB) => {
+      if (err) {
+        return res.status(400).json({
+          ok: false,
+          err,
+        });
+      }
+      return res.status(200).json({
+        ok: true,
+        msg: `Usuario actualizado correctamente`,
+        cont: proDB,
+      });
+    }
+  );
 });
+
 
 app.put("/producto/agregarComentario/:id", (req, res) => {
     let id = req.params.id;
@@ -205,3 +220,4 @@ module.exports = app;
 //USUARIOS
 //5ec96b36fcbbe72b60ba9da4
 //5eed144dc5ed952320c7a35d
+

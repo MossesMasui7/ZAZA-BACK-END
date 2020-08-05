@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const uniquevalidator = require("mongoose-unique-validator");
+const { any } = require("underscore");
 
 let Schema = mongoose.Schema;
 
@@ -30,8 +31,9 @@ let NegocioSchema = new Schema({
     type: String,
     default: "DISPONIBLE",
   },
-  productos: {
-    type: String,
+  cordenadas: {
+    _id: 0,
+    type: Object,
   },
 });
 
