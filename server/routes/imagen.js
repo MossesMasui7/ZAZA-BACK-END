@@ -15,9 +15,8 @@ app.get("/:ruta/:img", (req, res) => {
     case "producto":
       noImage = path.resolve(__dirname, "../../assets/noimage.jpg");
       break;
-    case "publicidad":
+    case "categoria":
       noImage = path.resolve(__dirname, "../../assets/noimage.jpg");
-      break;
   }
 
   if (fs.existsSync(rutaImagen)) {

@@ -2,27 +2,28 @@ const express = require("express");
 const _ = require("underscore");
 ///const { verificatoken } = require('../../middlewares/autenticacion');
 const Producto = require("../../models/producto");
-
-
+const Negocio = require("../../models/negocio");
 const usuario = require("../../models/usuario");
-=======
-const negocio = require("../../models/negocio");
 const upload = require("../../../scripts/uploadImage/upload");
-
+const pdf = require("html-pdf");
+const path = require("path");
+const uniqid = require("uniqid");
+const fs = require("fs");
 
 const app = express();
 
 app.post("/registrar", (req, res) => {
   let body = req.body;
+  let img = upload(body.img, "producto");
 
   let producto = new Producto({
     cdb: body.cdb,
-    nombre: body.nombre,
     descripcion: body.descripcion,
-    img: body.img,
+    contenido: body.contenido,
+    tipoContenido: body.tipoContenido,
+    categoria: body.categoria,
+    img: img,
   });
-
-  producto.img = upload(producto.img, "producto");
 
   producto.save((err, pDB) => {
     if (err) {
@@ -57,23 +58,6 @@ app.get("/obtener/:cdb", (req, res) => {
         ok: true,
         resp: CDBDB,
       });
-    });
-});
-
-
-app.get("/producto/obtenerComentarios/:id", (req, res) => {
-    let id = req.params.id;
-    Producto.find({ '_id': id }, (err, proDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err,
-            });
-        }
-        return res.status(200).json({
-            ok: true,
-            proDB
-        });
     });
 });
 
@@ -131,93 +115,131 @@ app.put("/add/negocio/:id", (req, res) => {
   );
 });
 
+app.get("/comparar/:idUsuario/:idNegocio", (req, res) => {
+  let id = req.params.idUsuario;
+  let idNegocio = req.params.idNegocio;
+  let resultado = [];
 
-app.put("/producto/agregarComentario/:id", (req, res) => {
-    let id = req.params.id;
-    let body = req.body;
-    Producto.findByIdAndUpdate(
-        id, {
-            $push: {
-                comentarios: {
-                    _idUsuario: body._idUsuario,
-                    username: body.username,
-                    texto: body.texto,
-                    fecha: body.fecha,
-                },
-            },
-        }, { new: true, runValidators: true, context: "query" },
-        (err, proDB) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    err,
-                });
-            }
-            return res.status(200).json({
-                ok: true,
-                msg: `Comentario Agregado Exitosamente`,
-                cont: proDB,
+  usuario.findById(id, (err, usuarioDB) => {
+    if (err) {
+      return res.status(400).json({
+        ok: false,
+        err,
+      });
+    }
+
+    Producto.populate(usuarioDB, { path: "carrito.producto" }, function (
+      err,
+      usuarioDB
+    ) {
+      usuarioDB["carrito"].forEach((element) => {
+        element["producto"]["tiendas"].forEach((ele) => {
+          if (ele["negocio"] == idNegocio) {
+            resultado.push({
+              Producto: element["producto"]["_id"],
+
+              Precio: ele["precio"],
             });
+          } else {
+            resultado.push({
+              Producto: element["producto"]["_id"],
+
+              Precio: "--",
+            });
+          }
+        });
+      });
+
+      for (let i = 0; i < resultado.length; i++) {
+        for (let index = 0; index < resultado.length; index++) {
+          if (resultado[i]["Producto"] == resultado[index]["Producto"]) {
+            if (resultado[index]["Precio"] == "--") {
+              resultado.splice(index, 1);
+            } else if (resultado[i]["Precio"] == "--") {
+              resultado.splice(i, 1);
+            }
+          }
         }
-    );
+      }
+
+      return res.status(200).json({
+        ok: true,
+        resp: resultado,
+      });
+    });
+  });
 });
 
+app.post("/generar/pdf/listaCompras", (req, res) => {
+  let body = req.body;
+  let nombre = uniqid();
+  let nombreUsuario = body.usuario;
+  let datos = "";
+  let reqDatos = body.datos;
+  console.log(reqDatos);
+  reqDatos.forEach((element) => {
+    console.log(element);
+    datos =
+      datos +
+      `<tr><td>${element["descripcion"]}</td><td>$${element["precio"]}.00</td></tr>`;
+  });
+  let contenido = `<!doctype html>
+  <html>
+     <head>
+          <meta charset="utf-8">
+          <title>PDF Result Template</title>
+          <style>
+              h1 {
+                  color: green;
+                  text-align:center;
+              }
+              table {
+                position:relative;
+                left:50%;
+                transform:translate(-50%,-50%);
+              }
+          </style>
+      </head>
+      <body>
+          <h1>Lista de compras de ${nombreUsuario}</h1>
+          <table border>
+              <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          </tr>
+          ${datos}
 
+          </table>
+         
+      </body>
+  </html>`;
+  pdf.create(contenido).toFile(`./uploads/pdf/pdf.pdf`, function (err, res) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(res);
+    }
+  });
+  return res.status(200).json({
+    ok: true,
+    id: nombre,
+  });
+});
 
-app.get("/comparar/:idUsuario/:idNegocio", (req, res) => {
-    let id = req.params.idUsuario;
-    let idNegocio = req.params.idNegocio
-    let resultado = []
-    usuario.findById(id, (err, usuarioDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err,
-            });
-        }
+app.get("/obtener/pdf/listaCompras/:id", (req, res) => {
+  let id = req.params.id;
 
-        Producto.populate(usuarioDB, { path: "carrito.producto" }, function(
-            err,
-            usuarioDB
-        ) {
-
-            usuarioDB['carrito'].forEach(carrito => {
-
-                carrito['producto']['tiendas'].forEach(element => {
-                    if (element['negocio'] == idNegocio) {
-                        let inf = {
-                            "Precio": element['precio'],
-                            "Tienda": element['negocio'],
-                            "Producto": carrito['producto']['_id']
-                        }
-                        resultado.push(inf)
-                    }
-
-
-                });
-
-
-
-
-            });
-
-
-            return res.status(200).json({
-                ok: true,
-                resp: resultado
-            })
-        });
-
-    });
+  if (
+    fs.existsSync(path.resolve(__dirname, `../../../uploads/pdf/${id}.pdf`))
+  ) {
+    return res.sendFile(
+      path.resolve(__dirname, `../../../uploads/pdf/${id}.pdf`)
+    );
+  } else {
+    return res.sendFile(
+      path.resolve(__dirname, `../../../uploads/pdf/pdf.pdf`)
+    );
+  }
 });
 
 module.exports = app;
-
-//PRODUCTOS
-//5efea43aaff0d01808c73d08
-//5efea4e2aff0d01808c73d09
-
-//USUARIOS
-//5ec96b36fcbbe72b60ba9da4
-//5eed144dc5ed952320c7a35d
-

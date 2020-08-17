@@ -13,5 +13,6 @@ app.use(require("./negocio/negocio"));
 app.use(require("./negocio/categoria"));
 app.use("/producto", require("./producto/actualizar"));
 app.use("/publicidad", require("./publicidad/publicidad"));
+app.use("/categoriaProducto", require("./categorias/categorias"));
 app.use("/imagen", require("./imagen"));
 module.exports = app;
