@@ -76,6 +76,17 @@ let UsuarioSchema = new Schema({
       },
     },
   ],
+  historialCompras: [
+    {
+      required: false,
+      precio: { type: Number },
+
+      producto: {
+        type: String,
+        ref: "Producto",
+      },
+    },
+  ],
 });
 
 UsuarioSchema.plugin(uniquevalidator, {
