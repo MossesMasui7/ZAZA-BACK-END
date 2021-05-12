@@ -23,7 +23,7 @@
     "mongoose-auto-increment": "^5.0.1",
     "mongoose-unique-validator": "^2.0.3",
     "node-datetime": "^2.1.2",
-    "nodemailer": "^6.4.6",
+    "nodemailer": "^6.4.16",
     "underscore": "^1.10.2",
     "uniqid": "^5.2.0"
   }
